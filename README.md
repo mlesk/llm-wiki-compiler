@@ -67,6 +67,7 @@ After step 4, Claude naturally reads wiki articles as part of its normal session
 | `/wiki-compile` | Compiles source files into topic articles (incremental -- only recompiles changes). Generates `schema.md` on first run. |
 | `/wiki-lint` | Health checks -- finds stale articles, orphan pages, missing cross-references, contradictions, low coverage |
 | `/wiki-query` | Optional -- Q&A against the wiki. Can file useful answers back into wiki articles. |
+| `/wiki-upgrade` | Update the plugin to the latest version from GitHub |
 
 The primary workflow is: **init → compile → add to AGENTS.md → done.** After that, Claude reads the wiki automatically. `/wiki-query` is a convenience for testing or quick lookups.
 
@@ -247,6 +248,22 @@ After the first full compile, `/wiki-compile` only recompiles topics whose sourc
 ### Scheduled Compilation
 
 Use Claude Code's `/schedule` to set up daily automatic compilation.
+
+### Updating the Plugin
+
+From inside Claude Code:
+```
+/wiki-upgrade
+```
+
+This pulls the latest version from GitHub and shows what changed. Restart Claude Code after to load new commands and hooks.
+
+If `/wiki-upgrade` isn't available yet (older version), update manually:
+```bash
+cd /path/to/llm-wiki-compiler && git pull
+claude plugin update llm-wiki-compiler
+# Then restart Claude Code
+```
 
 ## License
 
