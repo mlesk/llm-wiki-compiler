@@ -11,18 +11,21 @@ Compile all configured markdown source files into a topic-based wiki.
    - `output` must be set
    - Source paths must exist
 
-3. **Invoke the `wiki-compiler` skill** to run the 5-phase compilation:
+3. **Read schema** from `{output}/schema.md` if it exists. Use it to guide topic classification and naming. If it doesn't exist (first run), it will be generated in Phase 3.5.
+
+4. **Invoke the `wiki-compiler` skill** to run the compilation:
    - Phase 1: Scan sources
-   - Phase 2: Classify and discover topics
+   - Phase 2: Classify and discover topics (respecting schema if present)
    - Phase 3: Compile topic articles (use parallel agents when possible)
+   - Phase 3.5: Generate or update schema.md
    - Phase 4: Update INDEX.md
    - Phase 5: Update state and log
 
-4. **Show completion summary** with topics created/updated and source count.
+5. **Show completion summary** with topics created/updated, source count, and any schema changes.
 
 ## Arguments
 
-- No arguments: full compilation (recompile changed topics)
+- No arguments: incremental compilation (recompile changed topics)
 - `--full`: force recompile all topics regardless of changes
 - `--topic {slug}`: recompile only the specified topic
 - `--dry-run`: show what would be compiled without writing files

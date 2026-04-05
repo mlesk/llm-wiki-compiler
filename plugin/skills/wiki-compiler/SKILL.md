@@ -72,6 +72,22 @@ Relative paths should be from the `topics/` directory to the source file.
 
 **Parallel compilation:** When possible, compile multiple topic articles in parallel using subagents. Each subagent gets one topic + its source files. This significantly speeds up first-run compilation.
 
+## Phase 3.5: Generate or Update Schema
+
+If `{output}/schema.md` does not exist (first run):
+1. Generate it from `${CLAUDE_PLUGIN_ROOT}/templates/schema-template.md`
+2. Fill in the Topics section with all discovered topic slugs and descriptions
+3. Add an Evolution Log entry: "{today's date}: Initial schema generated from {N} topics"
+
+If `{output}/schema.md` already exists:
+1. Read it BEFORE Phase 2 (classification) -- use its topic list and naming conventions
+2. After Phase 3 (compilation), check for new topics not in the schema
+3. Add any new topics to the schema's Topics section
+4. Add an Evolution Log entry if topics were added: "{today's date}: Added {topic} -- {reason}"
+5. Never remove topics from schema without human approval -- flag them as candidates instead
+
+The schema is the source of truth for wiki structure. The human can edit it between compiles to rename topics, merge them, or change conventions. The compiler respects those changes.
+
 ## Phase 4: Update INDEX.md
 
 Write to `{output}/INDEX.md`:
@@ -96,7 +112,7 @@ Always regenerate INDEX.md, even if no topics changed (it's cheap).
 
 ## Phase 5: Update State and Log
 
-1. **Compile log** — Append to `{output}/compile-log.md`:
+1. **Log** — Append to `{output}/log.md`:
 ```markdown
 ## {today's date}
 

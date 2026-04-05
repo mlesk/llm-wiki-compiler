@@ -63,9 +63,10 @@ After step 4, Claude naturally reads wiki articles as part of its normal session
 
 | Command | Purpose |
 |---------|---------|
-| `/wiki-init` | One-time setup — auto-detects markdown directories, creates config |
-| `/wiki-compile` | Compiles source files into topic articles (incremental — only recompiles changes) |
-| `/wiki-query` | Optional — quick one-off Q&A against the wiki without updating AGENTS.md |
+| `/wiki-init` | One-time setup -- auto-detects markdown directories, creates config |
+| `/wiki-compile` | Compiles source files into topic articles (incremental -- only recompiles changes). Generates `schema.md` on first run. |
+| `/wiki-lint` | Health checks -- finds stale articles, orphan pages, missing cross-references, contradictions, low coverage |
+| `/wiki-query` | Optional -- Q&A against the wiki. Can file useful answers back into wiki articles. |
 
 The primary workflow is: **init → compile → add to AGENTS.md → done.** After that, Claude reads the wiki automatically. `/wiki-query` is a convenience for testing or quick lookups.
 
@@ -120,6 +121,27 @@ This gives you the speed of the wiki (84% fewer tokens) without sacrificing accu
 ### Obsidian Compatible
 
 The wiki output is plain markdown with Obsidian-style `[[wikilinks]]`. Open `wiki/INDEX.md` in Obsidian and you'll see the full knowledge base with bidirectional links to source files.
+
+### Schema Document
+
+On first compile, a `schema.md` is generated in your wiki output directory. It defines your wiki's structure: topic list, naming conventions, article format, and cross-reference rules.
+
+You can edit `schema.md` to rename topics, merge them, or add conventions. The compiler reads it before each run and respects your changes. New topics get added automatically with an evolution log entry.
+
+### Wiki Lint
+
+Run `/wiki-lint` to check wiki health:
+
+- **Stale articles** -- sources changed since last compile
+- **Orphan pages** -- articles with deleted/missing sources
+- **Missing cross-references** -- topics sharing 3+ sources that don't link to each other
+- **Low coverage sections** -- `[coverage: low]` tags flagged for improvement
+- **Contradictions** -- conflicting facts across articles (e.g., different dates for same event)
+- **Schema drift** -- topics in wiki/ not listed in schema.md, or vice versa
+
+### Query Filing
+
+When `/wiki-query` produces a useful synthesis that connects information across topics, it offers to file the answer back into the relevant wiki article. Your explorations compound in the knowledge base instead of disappearing with the session.
 
 ## Configuration
 
