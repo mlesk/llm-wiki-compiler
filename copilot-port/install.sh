@@ -11,10 +11,32 @@ if ! command -v copilot >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ ! -f "${PLUGIN_DIR}/.claude-plugin/plugin.json" ]; then
-  echo "Error: staged plugin manifest not found at ${PLUGIN_DIR}/.claude-plugin/plugin.json" >&2
+if [ ! -f "${PLUGIN_DIR}/plugin.json" ]; then
+  echo "Error: staged plugin manifest not found at ${PLUGIN_DIR}/plugin.json" >&2
   exit 1
 fi
+
+if [ ! -f "${PLUGIN_DIR}/hooks.template.json" ]; then
+  echo "Error: staged Copilot hook template not found at ${PLUGIN_DIR}/hooks.template.json" >&2
+  exit 1
+fi
+
+generate_hooks_config() {
+  PLUGIN_DIR="${PLUGIN_DIR}" python - <<'PY'
+import json
+import os
+from pathlib import Path
+
+plugin_dir = Path(os.environ["PLUGIN_DIR"])
+template_path = plugin_dir / "hooks.template.json"
+output_path = plugin_dir / "hooks.json"
+
+data = json.loads(template_path.read_text())
+command = data["hooks"]["SessionStart"][0]["hooks"][0]["command"]
+data["hooks"]["SessionStart"][0]["hooks"][0]["command"] = command.replace("__PLUGIN_ROOT__", str(plugin_dir))
+output_path.write_text(json.dumps(data, indent=2) + "\n")
+PY
+}
 
 resolve_settings_path() {
   if [ -n "${COPILOT_CHAT_SETTINGS_FILE:-}" ]; then
@@ -182,6 +204,7 @@ PY
 }
 
 echo "Installing ${PLUGIN_NAME} from ${PLUGIN_DIR}"
+generate_hooks_config
 copilot plugin install "${PLUGIN_DIR}"
 
 configure_chat_plugin

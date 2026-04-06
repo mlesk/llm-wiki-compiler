@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
+            "command": "bash \"__PLUGIN_ROOT__/hooks/session-start\"",
             "async": false
           }
         ]
