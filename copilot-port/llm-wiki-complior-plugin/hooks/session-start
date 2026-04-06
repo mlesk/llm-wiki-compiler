@@ -22,10 +22,40 @@ fi
 
 project_root="$(dirname "$config_file")"
 
+if ! command -v node >/dev/null 2>&1; then
+  echo "[Wiki Compiler] node is required for the Copilot port session-start hook." >&2
+  exit 0
+fi
+
+read_config_value() {
+  local key="$1"
+  local fallback="$2"
+
+  CONFIG_FILE="$config_file" CONFIG_KEY="$key" CONFIG_FALLBACK="$fallback" node <<'NODE'
+const fs = require('fs');
+
+try {
+  const raw = fs.readFileSync(process.env.CONFIG_FILE, 'utf8');
+  const config = JSON.parse(raw);
+  const value = config[process.env.CONFIG_KEY];
+  console.log(value === undefined || value === null || value === '' ? process.env.CONFIG_FALLBACK : value);
+} catch (error) {
+  console.error(`[Wiki Compiler] Failed to parse ${process.env.CONFIG_FILE}: ${error.message}`);
+  process.exit(1);
+}
+NODE
+}
+
 # Read config values using node
-output_path=$(node -e "const c=require('$config_file'); console.log(c.output || '')")
-mode=$(node -e "const c=require('$config_file'); console.log(c.mode || 'staging')")
-name=$(node -e "const c=require('$config_file'); console.log(c.name || 'Project')")
+if ! output_path="$(read_config_value output '')"; then
+  exit 0
+fi
+if ! mode="$(read_config_value mode 'staging')"; then
+  exit 0
+fi
+if ! name="$(read_config_value name 'Project')"; then
+  exit 0
+fi
 
 if [ -z "$output_path" ]; then
   exit 0
