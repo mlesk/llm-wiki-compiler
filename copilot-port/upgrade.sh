@@ -65,7 +65,13 @@ def replace_string_values(value, old: str, new: str):
 
 def indent_code_block(template: str, spaces: int) -> str:
     prefix = " " * spaces
-    return "\n".join(f"{prefix}{line}" if line else prefix.rstrip() for line in template.rstrip("\n").splitlines())
+    indented_lines = []
+    for line in template.rstrip("\n").splitlines():
+        if line:
+            indented_lines.append(f"{prefix}{line}")
+        else:
+            indented_lines.append("")
+    return "\n".join(indented_lines)
 
 
 def transform_session_start(source_text: str) -> str:
@@ -111,10 +117,13 @@ def transform_session_start(source_text: str) -> str:
     )
 
     pattern = re.compile(
-        r'project_root="\$\(dirname "\$config_file"\)"\n\n# Read config values using node\n'
-        r'output_path=\$\(node -e "const c=require\(\'\$config_file\'\); console\.log\(c\.output \|\| \'\'\)"\)\n'
-        r'mode=\$\(node -e "const c=require\(\'\$config_file\'\); console\.log\(c\.mode \|\| \'staging\'\)"\)\n'
-        r'name=\$\(node -e "const c=require\(\'\$config_file\'\); console\.log\(c\.name \|\| \'Project\'\)"\)\n'
+        r"""project_root="\$\(dirname "\$config_file"\)"
+
+# Read config values using node
+output_path=\$\(node -e "const c=require\('\$config_file'\); console\.log\(c\.output \|\| ''\)"\)
+mode=\$\(node -e "const c=require\('\$config_file'\); console\.log\(c\.mode \|\| 'staging'\)"\)
+name=\$\(node -e "const c=require\('\$config_file'\); console\.log\(c\.name \|\| 'Project'\)"\)
+"""
     )
     updated_text, count = pattern.subn(replacement, source_text, count=1)
     if count != 1:
@@ -137,7 +146,13 @@ def transform_session_start(source_text: str) -> str:
         """
     )
     updated_text, count = re.subn(
-        r'if \[ -z "\$output_path" \]; then\n  exit 0\nfi\n\nindex_file="\$project_root/\$output_path/INDEX\.md"\nstate_file="\$project_root/\$output_path/\.compile-state\.json"\n',
+        r"""if \[ -z "\$output_path" \]; then
+  exit 0
+fi
+
+index_file="\$project_root/\$output_path/INDEX\.md"
+state_file="\$project_root/\$output_path/\.compile-state\.json"
+""",
         output_path_block,
         updated_text,
         count=1,
