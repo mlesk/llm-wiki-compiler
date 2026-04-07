@@ -9,9 +9,11 @@ status: active
 
 ## Summary [coverage: {high|medium|low} -- {N} sources]
 {2-3 paragraph synthesis of everything known about this topic.
-Written as a briefing -- someone reading just this section should
-understand the current state without reading any source file.
-Be specific with numbers, dates, and decisions -- not vague summaries.}
+Each paragraph should be a titled subheading (###).
+Written as a bulleted list of short sentences -- someone
+reading just this section should understand the current
+state without reading any source file. Be specific with
+numbers, dates, and decisions -- not vague summaries.}
 
 ## Timeline [coverage: {high|medium|low} -- {N} sources]
 {Key events in chronological order}
