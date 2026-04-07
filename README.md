@@ -2,6 +2,8 @@
 
 A Claude Code plugin that compiles scattered markdown knowledge files into a topic-based wiki. Reduce context costs by ~90% and get instant answers from synthesized knowledge.
 
+**[Documentation](https://saydo-5cd0e3d7.mintlify.app/)**
+
 ## Inspiration
 
 This plugin implements the **LLM Knowledge Base** pattern described by [Andrej Karpathy](https://x.com/karpathy/status/2039805659525644595):
