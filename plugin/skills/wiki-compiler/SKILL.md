@@ -72,9 +72,11 @@ Relative paths should be from the `topics/` directory to the source file.
 
 **Parallel compilation:** When possible, compile multiple topic articles in parallel using subagents. Each subagent gets one topic + its source files. This significantly speeds up first-run compilation.
 
+**IMPORTANT — Sequencing:** Parallel dispatch is ONLY for Phase 3 (topic article compilation). After ALL parallel agents have returned and all topic articles are written, the PARENT process MUST continue to Phase 3.5 (concept discovery). Do NOT end the compilation after Phase 3. The remaining phases (3.5, 3.7, 4, 5) run sequentially in the parent process after parallel compilation completes.
+
 ## Phase 3.5: Discover and Compile Concept Articles
 
-After topic articles are written, look for cross-cutting patterns that span multiple topics. These become **concept articles** -- stored in `{output}/concepts/`.
+**This phase MUST run after Phase 3 completes.** Read the topic articles that were just compiled and look for cross-cutting patterns. These become **concept articles** -- stored in `{output}/concepts/`.
 
 **How to discover concepts:**
 
@@ -150,13 +152,23 @@ Total topics: {count} | Total sources: {unique file count}
 
 ## Topics
 
-| Topic | Sources | Last Updated | Status |
-|-------|---------|-------------|--------|
-| [[topics/{slug}]] | {count} | {date} | active |
+| Topic | Also Known As | Sources | Last Updated | Status |
+|-------|--------------|---------|-------------|--------|
+| [[topics/{slug}]] | {keyword aliases} | {count} | {date} | active |
+
+## Concepts
+
+| Concept | Connects | Last Updated |
+|---------|----------|-------------|
+| [[concepts/{slug}]] | {topic1}, {topic2}, {topic3} | {date} |
 
 ## Recent Changes
 - {date}: {what changed in this compilation run}
 ```
+
+**Keyword aliases:** For each topic, include alternate names, abbreviations, and related terms that someone might search for. For example, a topic called `side-quest-ideas` might have aliases "FitOS, Growth OS, Paperclip, ClawShip". These help `/wiki-search` and Claude find the right topic even when the user uses different terminology.
+
+**Concepts section:** List all concept articles with the topics they connect. If no concepts exist yet, omit this section.
 
 Always regenerate INDEX.md, even if no topics changed (it's cheap).
 
