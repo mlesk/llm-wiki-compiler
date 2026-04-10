@@ -42,112 +42,129 @@
     top: 20px; left: 20px;
   }
   .hud-stats h1 {
-    font-size: 16px; font-weight: 600; margin-bottom: 4px;
-    background: linear-gradient(135deg, #a78bfa, #6366f1);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-size: 15px; font-weight: 500; margin-bottom: 4px;
+    color: var(--text-primary);
+    letter-spacing: -0.2px;
   }
   .hud-stats .meta {
-    font-size: 11px; color: var(--text-muted); letter-spacing: 0.5px;
+    font-size: 11px; color: var(--text-muted); letter-spacing: 0.3px;
+    font-weight: 400;
   }
 
   .hud-search {
     top: 20px; right: 20px;
   }
   .hud-search input {
-    background: rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.04);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px 12px;
     color: var(--text-primary);
     font-size: 13px;
+    font-weight: 400;
     width: 200px;
     outline: none;
+    transition: border-color 0.2s;
   }
   .hud-search input::placeholder { color: var(--text-muted); }
-  .hud-search input:focus { border-color: rgba(99,102,241,0.4); }
+  .hud-search input:focus { border-color: rgba(59,130,246,0.3); }
 
   .hud-legend {
     bottom: 20px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    padding: 10px 20px;
   }
   .legend-item {
     display: flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--text-secondary);
+    font-size: 11px; color: var(--text-muted); font-weight: 400;
   }
   .legend-dot {
-    width: 8px; height: 8px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
   }
 
   /* Article Panel */
   .panel {
     position: fixed;
     top: 0; right: 0;
-    width: 420px; height: 100vh;
-    background: rgba(9,9,11,0.92);
+    width: 440px; height: 100vh;
+    background: rgba(9,9,11,0.94);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-left: 1px solid var(--border);
     z-index: 20;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
-    padding: 24px;
+    padding: 28px 24px;
   }
   .panel.open { transform: translateX(0); }
+  .panel::-webkit-scrollbar { width: 4px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
   .panel-close {
     position: absolute; top: 16px; right: 16px;
     background: none; border: none; color: var(--text-muted);
-    font-size: 20px; cursor: pointer; padding: 4px 8px;
-    border-radius: 6px;
+    font-size: 18px; cursor: pointer; padding: 4px 8px;
+    border-radius: 6px; transition: all 0.15s;
   }
-  .panel-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+  .panel-close:hover { color: var(--text-primary); background: rgba(255,255,255,0.04); }
   .panel h2 {
-    font-size: 20px; font-weight: 600; margin-bottom: 6px;
-    padding-right: 36px;
+    font-size: 18px; font-weight: 500; margin-bottom: 4px;
+    padding-right: 36px; letter-spacing: -0.3px;
   }
   .panel .panel-meta {
-    font-size: 11px; color: var(--text-muted); margin-bottom: 20px;
-    letter-spacing: 0.5px;
+    font-size: 11px; color: var(--text-muted); margin-bottom: 24px;
+    letter-spacing: 0.3px; font-weight: 400;
   }
   .panel .section { margin-bottom: 20px; }
   .panel .section-heading {
-    font-size: 13px; font-weight: 600; color: var(--text-secondary);
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
     margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+    text-transform: uppercase; letter-spacing: 0.5px;
   }
   .coverage-badge {
-    font-size: 10px; font-weight: 500; padding: 2px 6px;
-    border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+    font-size: 9px; font-weight: 500; padding: 2px 6px;
+    border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px;
   }
-  .coverage-high { background: rgba(34,197,94,0.15); color: #4ade80; }
-  .coverage-medium { background: rgba(234,179,8,0.15); color: #facc15; }
-  .coverage-low { background: rgba(239,68,68,0.15); color: #f87171; }
+  .coverage-high { background: rgba(34,197,94,0.1); color: #4ade80; }
+  .coverage-medium { background: rgba(234,179,8,0.1); color: #fbbf24; }
+  .coverage-low { background: rgba(239,68,68,0.1); color: #f87171; }
   .panel .section-content {
     font-size: 13px; line-height: 1.7; color: var(--text-secondary);
+    font-weight: 400;
   }
+  .panel .section-content strong { color: var(--text-primary); font-weight: 500; }
   .panel .section-content code {
-    background: rgba(255,255,255,0.06); padding: 1px 5px;
-    border-radius: 3px; font-size: 12px;
+    background: rgba(255,255,255,0.05); padding: 1px 5px;
+    border-radius: 3px; font-size: 12px; color: #93c5fd;
   }
-  .panel .section-content li { margin-bottom: 4px; }
-  .panel .section-content ul { padding-left: 18px; }
+  .panel .section-content li { margin-bottom: 5px; }
+  .panel .section-content ul { padding-left: 16px; list-style: none; }
+  .panel .section-content ul li::before {
+    content: ''; display: inline-block;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-muted); margin-right: 8px;
+    vertical-align: middle; position: relative; top: -1px;
+  }
 
   /* Tooltip */
   .tooltip {
     position: fixed; z-index: 30;
-    background: rgba(15,15,18,0.95);
+    background: rgba(15,15,18,0.96);
     backdrop-filter: blur(12px);
-    border: 1px solid var(--border);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 8px;
     padding: 10px 14px;
     font-size: 12px;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.15s;
+    transition: opacity 0.12s;
     max-width: 260px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
   .tooltip.visible { opacity: 1; }
-  .tooltip .tt-name { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
-  .tooltip .tt-detail { color: var(--text-muted); font-size: 11px; }
+  .tooltip .tt-name { font-weight: 500; color: var(--text-primary); margin-bottom: 2px; font-size: 13px; }
+  .tooltip .tt-detail { color: var(--text-muted); font-size: 11px; font-weight: 400; }
 </style>
 </head>
 <body>
@@ -183,11 +200,20 @@ const ctx = canvas.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 const panel = document.getElementById('panel');
 
-// Color palette (indigo-weighted, adapted for dark bg)
+// Muted intelligence palette — blue/violet/indigo weighted
 const PALETTE = [
-  '#818cf8', '#a78bfa', '#f472b6', '#34d399', '#fbbf24',
-  '#fb923c', '#38bdf8', '#e879f9', '#4ade80', '#f87171',
-  '#22d3ee', '#a3e635'
+  '#3b82f6', // blue-500
+  '#8b5cf6', // violet-500
+  '#6366f1', // indigo-500
+  '#06b6d4', // cyan-500
+  '#14b8a6', // teal-500
+  '#f59e0b', // amber-500
+  '#ec4899', // pink-500
+  '#8b5cf6', // violet-500
+  '#0ea5e9', // sky-500
+  '#a855f7', // purple-500
+  '#10b981', // emerald-500
+  '#f43f5e', // rose-500
 ];
 
 let W, H, centerX, centerY;
@@ -207,7 +233,7 @@ function resize() {
   centerX = W / 2;
   centerY = H / 2;
   if (panel.classList.contains('open')) {
-    centerX = (W - 420) / 2;
+    centerX = (W - 440) / 2;
   }
   layoutNodes();
 }
@@ -222,28 +248,26 @@ async function loadData() {
   document.getElementById('wikiMeta').textContent =
     `${graphData.topics.length} topics · ${graphData.totalSources || '?'} sources`;
 
-  // Build nodes
-  const maxSources = Math.max(...graphData.topics.map(t => t.sourceCount), 1);
   nodes = graphData.topics.map((t, i) => ({
     slug: t.slug,
     name: t.name,
     aliases: t.aliases,
     sourceCount: t.sourceCount,
     color: PALETTE[i % PALETTE.length],
-    radius: Math.min(10 + Math.sqrt(t.sourceCount) * 5, 50),
+    radius: Math.min(12 + Math.sqrt(t.sourceCount) * 4.5, 48),
+    scale: 1,
+    targetScale: 1,
     angle: 0, targetDist: 0,
     x: centerX, y: centerY,
     targetX: centerX, targetY: centerY
   }));
 
-  // Build edges
   edges = graphData.edges.map(e => ({
     from: e.from, to: e.to, concept: e.concept
   }));
 
   concepts = graphData.concepts;
 
-  // Build legend
   const legend = document.getElementById('legend');
   legend.innerHTML = nodes.map(n =>
     `<div class="legend-item"><div class="legend-dot" style="background:${n.color}"></div>${n.name}</div>`
@@ -257,11 +281,9 @@ async function loadData() {
 
 function layoutNodes() {
   if (!nodes.length) return;
-  const padding = 80;
-  const minDist = Math.max(Math.min(W, H) * 0.12, 60);
-  const maxDist = Math.min(W, H) * 0.36;
+  const minDist = Math.max(Math.min(W, H) * 0.14, 70);
+  const maxDist = Math.min(W, H) * 0.34;
 
-  // Connection count per node
   const connCount = {};
   nodes.forEach(n => { connCount[n.slug] = 0; });
   edges.forEach(e => {
@@ -274,8 +296,7 @@ function layoutNodes() {
 
   nodes.forEach((n, i) => {
     const conn = connCount[n.slug] || 0;
-    // More connections → closer to center
-    n.targetDist = minDist + (maxDist - minDist) * (1 - conn / maxConn) * 0.7 + minDist * 0.3;
+    n.targetDist = minDist + (maxDist - minDist) * (1 - conn / maxConn) * 0.65 + minDist * 0.35;
     n.angle = -Math.PI / 2 + angleStep * i;
     n.targetX = centerX + Math.cos(n.angle) * n.targetDist;
     n.targetY = centerY + Math.sin(n.angle) * n.targetDist;
@@ -291,37 +312,39 @@ function animate() {
   drawNodes();
   drawCenter();
 
-  // Lerp positions
   nodes.forEach(n => {
-    n.x += (n.targetX - n.x) * 0.06;
-    n.y += (n.targetY - n.y) * 0.06;
+    n.x += (n.targetX - n.x) * 0.05;
+    n.y += (n.targetY - n.y) * 0.05;
+    n.scale += (n.targetScale - n.scale) * 0.12;
   });
 
   animFrame = requestAnimationFrame(animate);
 }
 
 function drawBackground() {
-  const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(W, H) * 0.5);
-  grad.addColorStop(0, '#0d0d10');
+  const grad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, Math.max(W, H) * 0.55);
+  grad.addColorStop(0, '#0c0c10');
+  grad.addColorStop(0.5, '#0a0a0e');
   grad.addColorStop(1, '#09090b');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
 }
 
 function drawCenter() {
-  // Soft glow at center
-  const cGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 40);
-  cGrad.addColorStop(0, 'rgba(99,102,241,0.08)');
-  cGrad.addColorStop(1, 'rgba(99,102,241,0)');
+  // Soft glow ring
+  const cGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 50);
+  cGrad.addColorStop(0, 'rgba(59,130,246,0.05)');
+  cGrad.addColorStop(0.6, 'rgba(59,130,246,0.02)');
+  cGrad.addColorStop(1, 'rgba(59,130,246,0)');
   ctx.fillStyle = cGrad;
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 40, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
   ctx.fill();
 
   // Center dot
-  ctx.fillStyle = 'rgba(99,102,241,0.4)';
+  ctx.fillStyle = 'rgba(59,130,246,0.25)';
   ctx.beginPath();
-  ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+  ctx.arc(centerX, centerY, 2.5, 0, Math.PI * 2);
   ctx.fill();
 }
 
@@ -338,33 +361,48 @@ function drawEdges() {
       !toNode.name.toLowerCase().includes(searchQuery);
 
     ctx.save();
-    ctx.globalAlpha = isSearchDimmed ? 0.03 : (isHovered ? 0.35 : 0.08);
-    ctx.strokeStyle = isHovered ? '#818cf8' : '#a1a1aa';
-    ctx.lineWidth = isHovered ? 2 : 1;
+    ctx.globalAlpha = isSearchDimmed ? 0.02 : (isHovered ? 0.4 : 0.06);
+    ctx.strokeStyle = isHovered ? '#3b82f6' : 'rgba(59,130,246,0.5)';
+    ctx.lineWidth = isHovered ? 1.5 : 0.8;
 
-    // Curved edge (quadratic bezier through center offset)
+    // Curved edge
     const mx = (fromNode.x + toNode.x) / 2;
     const my = (fromNode.y + toNode.y) / 2;
     const dx = toNode.x - fromNode.x;
     const dy = toNode.y - fromNode.y;
-    const cpx = mx + dy * 0.15;
-    const cpy = my - dx * 0.15;
+    const cpx = mx + dy * 0.12;
+    const cpy = my - dx * 0.12;
 
     ctx.beginPath();
     ctx.moveTo(fromNode.x, fromNode.y);
     ctx.quadraticCurveTo(cpx, cpy, toNode.x, toNode.y);
     ctx.stroke();
 
-    // Edge label (concept name) at midpoint
+    // Edge label on hover — pill background for readability
     if (isHovered) {
       const concept = concepts.find(c => c.slug === e.concept);
       if (concept) {
         const lx = (fromNode.x + cpx + toNode.x) / 3;
         const ly = (fromNode.y + cpy + toNode.y) / 3;
-        ctx.globalAlpha = 0.7;
-        ctx.fillStyle = '#a1a1aa';
-        ctx.font = '10px -apple-system, system-ui, sans-serif';
+        ctx.globalAlpha = 1;
+        ctx.font = '500 10px -apple-system, system-ui, sans-serif';
         ctx.textAlign = 'center';
+        const textW = ctx.measureText(concept.name).width;
+        // Dark pill behind text
+        ctx.fillStyle = 'rgba(9,9,11,0.85)';
+        const px = 8, py = 4;
+        const rx = lx - textW / 2 - px;
+        const ry = ly - 6 - py - 4;
+        const rw = textW + px * 2;
+        const rh = 12 + py * 2;
+        ctx.beginPath();
+        ctx.roundRect(rx, ry, rw, rh, 4);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(59,130,246,0.2)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        // Text
+        ctx.fillStyle = '#d4d4d8';
         ctx.fillText(concept.name, lx, ly - 4);
       }
     }
@@ -385,63 +423,88 @@ function drawNodes() {
            (e.to === hoveredNode.slug && e.from === n.slug)
     );
 
+    // Scale animation target
+    n.targetScale = isHovered ? 1.15 : 1;
+
     ctx.save();
 
-    // Dim non-matching nodes during search
     if (searchQuery && !isSearchMatch) {
-      ctx.globalAlpha = 0.1;
+      ctx.globalAlpha = 0.08;
     } else if (hoveredNode && !isHovered && !isConnected) {
-      ctx.globalAlpha = 0.35;
+      ctx.globalAlpha = 0.25;
     } else {
       ctx.globalAlpha = 1;
     }
 
-    // Glow
+    const r = n.radius * n.scale;
+
+    // Outer glow (subtle, war-room style)
     if (isHovered || isSelected) {
-      ctx.shadowBlur = 25;
-      ctx.shadowColor = n.color;
+      const glowGrad = ctx.createRadialGradient(n.x, n.y, r, n.x, n.y, r * 2);
+      glowGrad.addColorStop(0, hexAlpha(n.color, 0.12));
+      glowGrad.addColorStop(1, hexAlpha(n.color, 0));
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    // Pulse for selected
-    let r = n.radius;
-    if (isSelected) {
-      r += Math.sin(time * 0.004) * 2;
-    }
-
-    // Node circle
-    const grad = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, r);
-    grad.addColorStop(0, n.color);
-    grad.addColorStop(1, hexAlpha(n.color, 0.6));
-    ctx.fillStyle = grad;
+    // Node fill — radial gradient: color20 → color08 (per spec)
+    const fillGrad = ctx.createRadialGradient(n.x - r * 0.2, n.y - r * 0.2, 0, n.x, n.y, r);
+    fillGrad.addColorStop(0, hexAlpha(n.color, 0.25));
+    fillGrad.addColorStop(0.7, hexAlpha(n.color, 0.12));
+    fillGrad.addColorStop(1, hexAlpha(n.color, 0.06));
+    ctx.fillStyle = fillGrad;
     ctx.beginPath();
     ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
     ctx.fill();
 
-    // Border
-    ctx.strokeStyle = hexAlpha(n.color, isHovered ? 0.8 : 0.3);
-    ctx.lineWidth = isHovered ? 2 : 1;
+    // Hairline stroke (per spec: 0.8px default, 1.5px hover)
+    ctx.strokeStyle = hexAlpha(n.color, isHovered ? 0.7 : 0.35);
+    ctx.lineWidth = isHovered ? 1.5 : 0.8;
     ctx.stroke();
 
-    // Label
+    // Pulse ring for selected
+    if (isSelected) {
+      const pulseR = r + 4 + Math.sin(time * 0.003) * 3;
+      ctx.strokeStyle = hexAlpha(n.color, 0.2 + Math.sin(time * 0.003) * 0.1);
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, pulseR, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Label — clear on hover, muted at rest
     ctx.shadowBlur = 0;
-    ctx.fillStyle = (isSearchMatch || !searchQuery) ? '#fafafa' : '#52525b';
-    ctx.font = `${isHovered ? '600' : '500'} ${r > 25 ? 12 : 11}px -apple-system, system-ui, sans-serif`;
+    ctx.shadowColor = 'transparent';
+    if (isHovered || isSelected) {
+      // White text with subtle dark halo for readability
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '600 13px -apple-system, system-ui, sans-serif';
+    } else {
+      ctx.fillStyle = isConnected ? '#d4d4d8' : '#a1a1aa';
+      ctx.font = '400 11px -apple-system, system-ui, sans-serif';
+    }
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(n.name, n.x, n.y + r + 8);
+    ctx.fillText(n.name, n.x, n.y + r + 10);
+    ctx.shadowBlur = 0;
 
-    // Source count badge
-    if (r > 15) {
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.font = '600 10px -apple-system, system-ui, sans-serif';
+    // Source count inside node
+    if (r > 16) {
+      ctx.fillStyle = isHovered ? '#ffffff' : hexAlpha(n.color, 0.7);
+      ctx.font = `${isHovered ? '600' : '500'} ${isHovered ? '12' : '10'}px -apple-system, system-ui, sans-serif`;
       ctx.textBaseline = 'middle';
+      ctx.textAlign = 'center';
       ctx.fillText(n.sourceCount, n.x, n.y);
     }
 
-    // Connection line to center (very faint)
-    ctx.globalAlpha *= 0.04;
-    ctx.strokeStyle = n.color;
-    ctx.lineWidth = 1;
+    // Spoke to center (very faint)
+    ctx.globalAlpha *= 0.03;
+    ctx.strokeStyle = hexAlpha(n.color, 0.3);
+    ctx.lineWidth = 0.5;
     ctx.beginPath();
     ctx.moveTo(centerX, centerY);
     ctx.lineTo(n.x, n.y);
@@ -465,23 +528,20 @@ canvas.addEventListener('mousemove', (e) => {
   let found = null;
   let foundEdge = null;
 
-  // Check nodes
   for (const n of nodes) {
     const dist = Math.sqrt((mx - n.x) ** 2 + (my - n.y) ** 2);
-    if (dist < n.radius + 8) { found = n; break; }
+    if (dist < n.radius * n.scale + 10) { found = n; break; }
   }
 
-  // Check edges if no node found
   if (!found) {
-    for (const e of edges) {
-      const fromN = nodes.find(n => n.slug === e.from);
-      const toN = nodes.find(n => n.slug === e.to);
+    for (const edge of edges) {
+      const fromN = nodes.find(n => n.slug === edge.from);
+      const toN = nodes.find(n => n.slug === edge.to);
       if (!fromN || !toN) continue;
-      // Simple midpoint proximity check
       const emx = (fromN.x + toN.x) / 2;
       const emy = (fromN.y + toN.y) / 2;
       const dist = Math.sqrt((mx - emx) ** 2 + (my - emy) ** 2);
-      if (dist < 30) { foundEdge = e; break; }
+      if (dist < 30) { foundEdge = edge; break; }
     }
   }
 
@@ -489,18 +549,17 @@ canvas.addEventListener('mousemove', (e) => {
   hoveredEdge = foundEdge;
   canvas.style.cursor = (found || foundEdge) ? 'pointer' : 'default';
 
-  // Tooltip
   if (found) {
     document.getElementById('ttName').textContent = found.name;
     document.getElementById('ttDetail').textContent =
-      `${found.sourceCount} sources · Click to read article`;
+      `${found.sourceCount} sources · Click to read`;
     tooltip.style.left = (mx + 16) + 'px';
     tooltip.style.top = (my - 10) + 'px';
     tooltip.classList.add('visible');
   } else if (foundEdge) {
     const concept = concepts.find(c => c.slug === foundEdge.concept);
     document.getElementById('ttName').textContent = concept ? concept.name : foundEdge.concept;
-    document.getElementById('ttDetail').textContent = 'Click to read concept article';
+    document.getElementById('ttDetail').textContent = 'Click to read concept';
     tooltip.style.left = (mx + 16) + 'px';
     tooltip.style.top = (my - 10) + 'px';
     tooltip.classList.add('visible');
@@ -509,7 +568,7 @@ canvas.addEventListener('mousemove', (e) => {
   }
 });
 
-canvas.addEventListener('click', async (e) => {
+canvas.addEventListener('click', async () => {
   if (hoveredNode) {
     selectedNode = hoveredNode;
     await openArticle('topic', hoveredNode.slug);
@@ -549,7 +608,7 @@ async function openArticle(type, slug) {
   }).join('');
 
   panel.classList.add('open');
-  centerX = (W - 420) / 2;
+  centerX = (W - 440) / 2;
   layoutNodes();
 }
 
@@ -562,19 +621,24 @@ function closePanel() {
 
 document.getElementById('panelClose').addEventListener('click', closePanel);
 
-// --- Simple Markdown → HTML ---
+// Escape to close panel
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && panel.classList.contains('open')) closePanel();
+});
+
+// --- Simple Markdown to HTML ---
 
 function markdownToHtml(md) {
   return md
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/^- \*\*(.+?)\*\*\s*[—–-]\s*(.+)$/gm, '<li><strong>$1</strong> — $2</li>')
     .replace(/^- \*\*(.+?)\*\*\s*\((.+?)\)\s*[—–-]\s*(.+)$/gm, '<li><strong>$1</strong> ($2) — $3</li>')
+    .replace(/^- \*\*(.+?)\*\*\s*[—–-]\s*(.+)$/gm, '<li><strong>$1</strong> — $2</li>')
     .replace(/^- (.+)$/gm, '<li>$1</li>')
     .replace(/(<li>[\s\S]*?<\/li>)/g, (m) => `<ul>${m}</ul>`)
     .replace(/<\/ul>\s*<ul>/g, '')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="#" style="color:#818cf8">$1</a>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="#" style="color:#60a5fa;text-decoration:none">$1</a>')
     .replace(/\n\n/g, '<br><br>')
     .replace(/\n/g, '<br>');
 }
