@@ -267,8 +267,11 @@ async function loadData() {
   graphData = await res.json();
 
   document.getElementById('wikiName').textContent = graphData.name;
+  const topicCount = graphData.topics.length;
+  const sourceCount = graphData.totalSources || 0;
+  const reduction = sourceCount > 0 ? Math.round((1 - topicCount / sourceCount) * 100) : 0;
   document.getElementById('wikiMeta').textContent =
-    `${graphData.topics.length} TOPICS · ${graphData.totalSources || '?'} SOURCES`;
+    `${topicCount} TOPICS · ${sourceCount} SOURCES · ${reduction}% FEWER FILES`;
 
   nodes = graphData.topics.map((t, i) => ({
     slug: t.slug,
