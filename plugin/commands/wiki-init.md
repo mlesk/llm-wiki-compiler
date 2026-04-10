@@ -3,8 +3,9 @@
 Interactive, conversational setup for a new knowledge base wiki. One question at a time, multiple choice when possible.
 
 **Arguments:**
-- (none) — standard interactive init for markdown knowledge bases
-- `--codebase` — streamlined init for code repositories (fast-path, ~1 question)
+- (none) — auto-detects whether this is a codebase or knowledge project (see Auto-Detection below)
+- `--codebase` — force codebase mode (skip auto-detection)
+- `--knowledge` — force knowledge mode (skip auto-detection)
 
 ## Instructions
 
@@ -12,9 +13,32 @@ Interactive, conversational setup for a new knowledge base wiki. One question at
 
 ---
 
-## Codebase Mode (`--codebase`)
+## Auto-Detection (when no flag is provided)
 
-When the user runs `/wiki-init --codebase`, use this streamlined flow instead of the standard 10-step process.
+Before asking any questions, scan the project root to determine the mode:
+
+1. **Check for code manifest files:** `package.json`, `go.mod`, `Cargo.toml`, `pyproject.toml`, `requirements.txt`, `Gemfile`, `*.sln`, `Package.swift`, `pom.xml`, `build.gradle`
+2. **Check for markdown-heavy directories:** `Knowledge/`, `docs/`, `notes/`, `content/`, `meetings/`, `research/`, or any directory with 10+ `.md` files
+
+**Decision logic:**
+- **Manifest found, no markdown directories** → codebase mode
+- **Markdown directories found, no manifest** → knowledge mode
+- **Both found** → ask the user:
+  ```
+  I see both code files and markdown knowledge directories here.
+  
+  A) Codebase wiki — compile a wiki about this codebase's architecture, decisions, and patterns
+  B) Knowledge wiki — compile a wiki from your markdown files (meetings, notes, research)
+  ```
+- **Neither found** → ask the user what they want to compile
+
+Then proceed to the appropriate mode below.
+
+---
+
+## Codebase Mode (`--codebase` or auto-detected)
+
+When codebase mode is selected, use this streamlined flow instead of the standard 10-step process.
 
 ### Codebase Step 1: Check for existing config
 
@@ -135,7 +159,7 @@ Want me to add a reference to wiki/CONTEXT.md in your CLAUDE.md?
 
 ---
 
-## Standard Mode (no flags)
+## Knowledge Mode (`--knowledge` or auto-detected)
 
 ### Step 1: Check for existing config
 
