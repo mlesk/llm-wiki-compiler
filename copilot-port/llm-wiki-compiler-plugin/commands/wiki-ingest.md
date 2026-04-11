@@ -1,6 +1,6 @@
 # Ingest Web Resources Into Wiki
 
-Download urls to './wiki-ingest/' `as a source, convert it to markdown, and run compilation.
+Download URLs into `./wiki-ingest/` and treat it as a source directory, convert the content to markdown, and run compilation.
 
 ## Instructions
 
