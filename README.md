@@ -1,6 +1,18 @@
 # LLM Wiki Compiler
 
-A Claude Code plugin that compiles scattered markdown knowledge files into a topic-based wiki. Reduce context costs by ~90% and get instant answers from synthesized knowledge.
+A Claude Code plugin that compiles knowledge into a topic-based wiki — from scattered markdown files **or entire codebases**. Reduce context costs by ~90% and give your agent a synthesized understanding of any project.
+
+**[Documentation](https://saydo-5cd0e3d7.mintlify.app/)**
+
+### What's New in v2.0
+
+- **Codebase mode** — generate wikis from code repositories, not just markdown files
+- **Auto-detection** — `/wiki-init` detects whether you're in a codebase or knowledge project
+- **Knowledge graph visualization** — interactive canvas-based graph of your wiki
+
+![Knowledge Graph — Dayflow codebase wiki](assets/knowledge-graph.png)
+
+![Article panel with coverage badges](assets/knowledge-graph-panel.png)
 
 ## Inspiration
 
@@ -12,10 +24,48 @@ The key insight: instead of re-reading hundreds of raw files every session, have
 
 ## What It Does
 
-You have 100+ markdown files across meetings, strategy docs, session notes, and research. Every Claude session re-reads them. This plugin compiles them into topic-based articles that synthesize everything known about each subject — with backlinks to sources.
+You have 100+ files across meetings, strategy docs, codebases, and research. Every Claude session re-reads them. This plugin compiles them into topic-based articles that synthesize everything known about each subject — with backlinks to sources.
 
 **Before:** Read 13+ raw files (~3,200 lines) per session
 **After:** Read INDEX + 2 topic articles (~330 lines) per session
+
+![Before and After — LLM Wiki Compiler](assets/before-after.png)
+
+### How It Works
+
+```mermaid
+flowchart LR
+    subgraph Sources["📁 Raw Sources (you own)"]
+        M1["meetings/"]
+        M2["strategy/"]
+        M3["research/"]
+        M4["notes/"]
+    end
+
+    subgraph Commands["⚡ Commands"]
+        INIT["/wiki-init<br/>samples files<br/>proposes structure"]
+        COMPILE["/wiki-compile<br/>batch compilation"]
+        INGEST["/wiki-ingest<br/>single file, interactive"]
+        SEARCH["/wiki-search<br/>find anything"]
+        LINT["/wiki-lint<br/>health check"]
+    end
+
+    subgraph Wiki["📖 Compiled Wiki (LLM owns)"]
+        INDEX["INDEX.md"]
+        T1["topics/retention.md"]
+        T2["topics/onboarding.md"]
+        T3["topics/..."]
+        C1["concepts/..."]
+        SCHEMA["schema.md"]
+    end
+
+    Sources -->|"383 files · 13 MB"| COMPILE --> Wiki
+    Sources -->|"1 file"| INGEST --> Wiki
+    INIT -->|"creates config +<br/>article structure"| COMPILE
+    Wiki -->|"13 articles · 161 KB<br/>84% fewer tokens"| LLM["🤖 Your LLM Agent<br/>reads wiki, not raw files"]
+    LINT -.->|"checks"| Wiki
+    SEARCH -.->|"searches"| Wiki
+```
 
 ## Install
 
@@ -43,30 +93,163 @@ claude --plugin-dir /path/to/llm-wiki-compiler/plugin
 ## Quick Start
 
 ```bash
-# 1. Initialize — auto-detects your markdown directories, creates config
+# 1. Initialize — auto-detects whether this is a codebase or knowledge project,
+#    samples your files, proposes a domain-specific article structure
 /wiki-init
 
 # 2. Compile — reads all sources, creates topic articles (5-10 min first run)
 /wiki-compile
 
-# 3. Browse in Obsidian — open wiki/INDEX.md to see all topics with backlinks
+# 3. Visualize — launch an interactive knowledge graph of your wiki
+/wiki-visualize
 
-# 4. (Optional) Add the wiki to your AGENTS.md so Claude uses it automatically
-#    See "Integrating with AGENTS.md" section below
+# 4. Browse in Obsidian — open wiki/INDEX.md to see all topics with backlinks
 ```
 
-After step 4, Claude naturally reads wiki articles as part of its normal session flow — no special commands needed.
+After setup, Claude reads wiki articles automatically at session start — no special commands needed. The wiki updates incrementally when sources change.
 
-## How It Works
+## Codebase Mode (New in v2.0)
+
+Generate a wiki from a code repository — not just markdown files, but the full knowledge embedded in your codebase: architecture, API contracts, decision records, deployment configs, and gotchas.
+
+### Quick Start
+
+```bash
+# One command to set up and compile
+/wiki-init --codebase
+```
+
+The compiler auto-detects your project type, discovers modules/services, finds knowledge files (READMEs, ADRs, API specs, Docker configs), and compiles everything into topic articles.
+
+### What It Scans
+
+| File Type | Examples | What It Captures |
+|-----------|----------|-----------------|
+| Documentation | `README.md`, `CLAUDE.md`, `ARCHITECTURE.md` | Purpose, architecture, conventions |
+| API contracts | `*.proto`, `*.graphql`, `openapi.yaml` | API surface, inter-service communication |
+| Decision records | `ADR-*.md`, `docs/adr/*.md` | Key decisions and rationale |
+| Infrastructure | `docker-compose.yml`, `Dockerfile`, `k8s/*.yaml` | Deployment topology, scaling |
+| Operations | `docs/runbooks/*.md`, `CHANGELOG.md` | Gotchas, failure modes, version history |
+| Config shape | `.env.example`, `package.json` | Environment requirements, dependencies |
+
+With `deep_scan: true`, it also reads entry points, type definitions, and route files for richer articles.
+
+### Example Output
+
+```markdown
+# auth-service
+
+## Purpose [coverage: high -- 8 sources]
+Handles user authentication and session management via JWT tokens.
+All other services call auth-service to validate requests.
+
+## Talks To [coverage: high -- 6 sources]
+- **user-service** (REST: /api/users/:id) -- subscription status lookup
+- **notification-service** (SQS: auth.password-reset) -- triggers email
+- **billing-service** (gRPC) -- validates payment status before premium access
+
+## Key Decisions [coverage: medium -- 3 sources]
+- **JWT over sessions** -- stateless scaling, no shared session store (ADR-003)
+- **Refresh token rotation** -- security requirement from compliance audit
+
+## Gotchas [coverage: high -- 5 sources]
+- Token expiry is 15 minutes, not 1 hour (changed in v2.3)
+- Rate limiting on /auth/login is per-IP, not per-user
+```
+
+### How It Differs from Google Code Wiki / DeepWiki
+
+Those tools answer "what does this code do?" by parsing functions and generating API docs.
+
+This tool answers **"what does this project *know*?"** by synthesizing documentation, decision records, deployment configs, and operational knowledge into articles an agent can navigate.
+
+| | Google Code Wiki / DeepWiki | LLM Wiki Compiler |
+|---|---|---|
+| Input | Source code (AST parsing) | Knowledge files + optional code |
+| Output | API docs + architecture diagrams | Synthesized topic articles with coverage indicators |
+| Infrastructure | Hosted platform / server + embeddings | Zero infra — Claude Code plugin |
+| Updates | Full regen on every commit | Incremental — only changed topics |
+| Consumer | Developers reading docs | Your AI agent (and you) |
+
+### Monorepo / Microservice Support
+
+For monorepos, the compiler detects service boundaries by looking for directories with their own manifest files (`package.json`, `go.mod`, etc.). Each service becomes a topic article. Cross-cutting concerns (infrastructure, testing, deployment) get their own articles.
+
+```
+📚 Wiki compiled — 8 topics from 47 files
+
+  Topics created:
+  ├── auth-service (12 sources)
+  ├── billing-service (9 sources)
+  ├── notification-service (6 sources)
+  ├── api-gateway (5 sources)
+  ├── infrastructure (4 sources)
+  ├── testing (3 sources)
+  └── deployment (3 sources)
+
+  Concepts discovered:
+  ├── error-handling-strategy — shared pattern across 4 services
+  └── auth-flow — touches auth, gateway, billing
+```
+
+### Codebase Configuration
+
+```json
+{
+  "version": 2,
+  "mode": "codebase",
+  "name": "My Project",
+  "sources": [{ "path": "./", "exclude": ["node_modules/", "dist/", ".git/", "wiki/"] }],
+  "output": "wiki/",
+  "service_discovery": "auto",
+  "deep_scan": false,
+  "knowledge_files": ["README.md", "CLAUDE.md", "*.proto", "openapi.*", "ADR-*.md", "Dockerfile"]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `mode` | `"codebase"` enables code-aware topic discovery |
+| `service_discovery` | `"auto"` detects monorepo vs single project |
+| `deep_scan` | `true` to also read source code files for richer articles |
+| `knowledge_files` | Glob patterns for priority documentation files |
+
+## Knowledge Graph Visualization
+
+See your compiled wiki as an interactive knowledge graph. Topics appear as nodes sized by source count, concepts as connecting edges.
+
+```bash
+/wiki-visualize
+```
+
+- **Hover** nodes to see source count and highlight connections
+- **Click** a node to read the full article in a side panel with coverage badges
+- **Hover edges** to see concept names linking topics
+- **Search** to filter topics by name or alias
+- **Escape** to close the article panel
+
+Canvas-based, zero dependencies, Nothing Design System tokens (Space Grotesk + Space Mono typography). Works with both knowledge mode and codebase mode wikis.
+
+You can also run it manually without the plugin:
+```bash
+node plugin/visualize/server.js --wiki-dir path/to/wiki/
+# Open http://localhost:3848
+```
+
+## How It Works (Knowledge Mode)
 
 ### Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/wiki-init` | One-time setup -- auto-detects markdown directories, creates config |
+| `/wiki-init` | One-time setup -- auto-detects markdown directories, samples files, proposes custom article structure |
 | `/wiki-compile` | Compiles source files into topic articles (incremental -- only recompiles changes). Generates `schema.md` on first run. |
+| `/wiki-ingest` | Add a single source interactively -- read, discuss key takeaways, update relevant wiki articles |
+| `/wiki-search` | Search across wiki articles by keyword or phrase |
 | `/wiki-lint` | Health checks -- finds stale articles, orphan pages, missing cross-references, contradictions, low coverage |
 | `/wiki-query` | Optional -- Q&A against the wiki. Can file useful answers back into wiki articles. |
+| `/wiki-migrate` | One-time migration -- analyzes your AGENTS.md startup reads, shows which are covered by wiki, generates replacement |
+| `/wiki-visualize` | Launch interactive knowledge graph of your compiled wiki |
 | `/wiki-upgrade` | Update the plugin to the latest version from GitHub |
 
 The primary workflow is: **init → compile → add to AGENTS.md → done.** After that, Claude reads the wiki automatically. `/wiki-query` is a convenience for testing or quick lookups.
@@ -88,15 +271,18 @@ Change mode by editing `.wiki-compiler.json`:
 
 ### What Gets Compiled
 
-Each topic article contains:
-- **Summary** — 2-3 paragraph briefing (standalone understanding)
-- **Timeline** — Key events with dates
-- **Current State** — What's true right now
-- **Key Decisions** — With rationale and source links
-- **Experiments & Results** — Status table
-- **Gotchas & Known Issues** — Topic-specific traps
-- **Open Questions** — Unresolved threads
-- **Sources** — Backlinks to every raw file (Obsidian wikilinks)
+During `/wiki-init`, the compiler samples your source files and proposes an article structure that fits your domain. You approve (or tweak) the sections before anything gets compiled.
+
+For example, a product team's wiki might get:
+- **Summary** — **Timeline** — **Current State** — **Key Decisions** — **Experiments & Results** — **Gotchas** — **Open Questions** — **Sources**
+
+While a research wiki might get:
+- **Summary** — **Key Findings** — **Methodology** — **Evidence** — **Gaps & Contradictions** — **Open Questions** — **Sources**
+
+And a book notes wiki might get:
+- **Summary** — **Characters** — **Themes** — **Plot Threads** — **Connections** — **Quotes** — **Sources**
+
+The structure is saved in `.wiki-compiler.json` and can be edited anytime. **Summary** and **Sources** are always included.
 
 ### Coverage Indicators (Best of Both Worlds)
 
@@ -129,7 +315,7 @@ After compiling topic articles, the compiler looks for patterns that span 3+ top
 
 Examples from a real project:
 - **"Speed vs Quality Tradeoff"** -- 6 instances where this decision appeared across retention, push notifications, and experiment design
-- **"Working with Nish"** -- communication patterns and decision dynamics synthesized from 24 meetings
+- **"Cross-Team Decision Patterns"** -- communication patterns and decision dynamics synthesized from 24 meetings
 - **"Evolution of Retention Thinking"** -- how the approach changed from Oct 2025 to Apr 2026 across analytics, strategy, and experiments
 
 Concept articles are discovered automatically during compilation. You can also seed them in `schema.md` if you know what patterns you want tracked.
@@ -161,14 +347,14 @@ When `/wiki-query` produces a useful synthesis that connects information across 
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "name": "My Project",
+  "mode": "staging",
   "sources": [
     { "path": "Knowledge/", "exclude": ["wiki/"] },
     { "path": "docs/meetings/" }
   ],
   "output": "Knowledge/wiki/",
-  "mode": "staging",
   "topic_hints": ["retention", "onboarding"],
   "link_style": "obsidian"
 }
@@ -176,12 +362,35 @@ When `/wiki-query` produces a useful synthesis that connects information across 
 
 | Field | Description |
 |-------|-------------|
+| `version` | Config version (`2` for latest) |
 | `name` | Display name for the knowledge base |
-| `sources` | Directories to scan for .md files |
+| `mode` | Integration mode: `staging` / `recommended` / `primary` — OR `codebase` for code repositories |
+| `sources` | Directories to scan |
 | `output` | Where compiled wiki lives |
-| `mode` | `staging` / `recommended` / `primary` |
+| `article_sections` | Article structure — generated during `/wiki-init` based on your content (see below) |
 | `topic_hints` | Optional seed topics to guide classification |
 | `link_style` | `obsidian` (wikilinks) or `markdown` (standard links) |
+| `service_discovery` | (codebase mode) `auto` or `manual` — how to detect modules/services |
+| `knowledge_files` | (codebase mode) Glob patterns for priority documentation files |
+| `deep_scan` | (codebase mode) `true` to also read source code files |
+
+### Custom Article Structure
+
+The `article_sections` array defines what sections appear in each topic article. It's generated during `/wiki-init` by sampling your source files — the compiler proposes sections that fit your domain, and you approve or tweak them.
+
+```json
+"article_sections": [
+  { "name": "Summary", "description": "standalone briefing of the topic", "required": true },
+  { "name": "Key Findings", "description": "main discoveries and insights" },
+  { "name": "Methodology", "description": "approaches and methods used" },
+  { "name": "Open Questions", "description": "unresolved threads and gaps" },
+  { "name": "Sources", "description": "backlinks to all contributing files", "required": true }
+]
+```
+
+You can edit this array anytime — add, remove, or rename sections. The compiler will use your updated structure on the next `/wiki-compile` run. `Summary` and `Sources` are required and cannot be removed.
+
+If `article_sections` is missing (older configs), the compiler falls back to a default template.
 
 ## Safety Guarantees
 
@@ -192,13 +401,17 @@ When `/wiki-query` produces a useful synthesis that connects information across 
 
 ## Cost Savings (Real Data)
 
-Tested on a project with 383 markdown files (13.1 MB). All numbers verified with `wc`:
+Tested on a real project with 1,183 markdown files across meetings, strategy docs, session histories, and research notes.
+
+### Token Reduction
 
 | | Without Wiki | With Wiki |
 |---|---|---|
-| Session startup context | ~47K tokens (13 files) | ~7.7K tokens (INDEX + 2 articles) |
+| Session startup context | ~79K tokens (13 files) | ~8.5K tokens (INDEX + 2-3 articles) |
 | Per-question research | ~8,000 tokens (10+ files) | ~600 tokens (1 article) |
-| **Reduction** | — | **84%** |
+| **Reduction** | — | **89%** |
+
+### Compilation Costs
 
 | | Tokens | Cost (Opus) | Cost (Sonnet) |
 |---|---|---|---|
@@ -206,9 +419,19 @@ Tested on a project with 383 markdown files (13.1 MB). All numbers verified with
 | Daily incremental | ~100K | ~$1.50 | ~$0.30 |
 | **Break-even** | — | **First session** | **First session** |
 
-Compression highlights:
-- 383 files (13.1 MB) → 13 articles (161 KB) — **81x compression**
-- 130 meeting transcripts (122,625 lines) → 1 digest article (244 lines) — **503x**
+### Accuracy
+
+We spot-checked wiki articles against their raw source files:
+
+- **10/10 key facts accurately synthesized** -- no fabrication, no missing critical details
+- **Coverage indicators are honest** -- sections marked `[coverage: high]` had 5+ contributing sources
+- **Trade-off is transparent** -- wiki captures ~90% of raw file content; coverage tags tell you when to fall back to raw sources for the remaining 10%
+
+### Compression
+
+- 1,183 files → 14 topic articles -- **84x compression**
+- Session startup: 13 file reads → 1 INDEX + 2-3 topic articles -- **89% fewer tokens**
+- ~$1.05 saved per session at Opus pricing ($15/M input tokens)
 
 ## Integrating with AGENTS.md (Recommended)
 
@@ -255,6 +478,68 @@ After the first full compile, `/wiki-compile` only recompiles topics whose sourc
 ```
 /wiki-compile --topic retention
 ```
+
+### Interactive Ingest
+
+Add sources one at a time with `/wiki-ingest`:
+
+```
+/wiki-ingest path/to/new-meeting-notes.md
+```
+
+The compiler reads the file, shows you key takeaways, asks what to emphasize, then updates all relevant topic articles. A single source might touch multiple topics — the compiler handles the cross-referencing.
+
+This is Karpathy's recommended workflow for staying involved with your knowledge base as it grows. Use `/wiki-compile` for batch processing, `/wiki-ingest` for interactive single-source additions.
+
+### Wiki Search
+
+Search your compiled wiki:
+
+```
+/wiki-search retention experiments
+```
+
+Searches topic names first (fast), then full article content if needed. Results include coverage indicators so you know when to trust the wiki vs read raw sources.
+
+For synthesis questions that require connecting multiple topics, use `/wiki-query` instead.
+
+For large wikis (100+ topics), consider adding [qmd](https://github.com/jina-ai/qmd) as an MCP server for hybrid BM25/vector search with LLM re-ranking.
+
+### Migrate to Wiki-First Startup
+
+Once your wiki is compiled and spot-checked, run `/wiki-migrate` to switch your AGENTS.md from reading raw files to reading the wiki:
+
+```
+/wiki-migrate
+
+Wiki Migration Report for "My Project"
+
+Current startup: 13 file reads
+
+✅ gotchas.md → covered by analytics [coverage: high]
+✅ product-context.md → covered by product [coverage: high]
+⚠️ reporting-backlog.md → partially covered [coverage: medium]
+❌ acceptance-criteria.md → not covered (operational checklist)
+
+Summary: 10/13 reads can be replaced
+Estimated savings: ~79K → ~8.5K tokens (89% reduction)
+```
+
+The command generates a replacement startup section and applies it with your confirmation.
+
+### Stale Wiki Detection
+
+The plugin automatically detects when source files have changed since the last compile. Enable it in `.wiki-compiler.json`:
+
+```json
+{ "auto_update": "prompt" }
+```
+
+With `prompt` mode, the SessionStart hook counts changed files and warns:
+
+> "Wiki may be stale — 42 files changed since last compile (2026-04-06). Run /wiki-compile to update."
+
+Set to `"off"` (default) to disable.
 
 ### Scheduled Compilation
 
