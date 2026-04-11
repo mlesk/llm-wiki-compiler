@@ -8,7 +8,7 @@ Download URLs into `./wiki-ingest/` and treat it as a source directory, convert 
 
 2. Convert each downloaded page to markdown.
 
-3. Store converted to markdown files as original page name but with `md` extension.
+3. Store converted to markdown files as original page name but with `.md` extension.
 
 4. **Invoke the `wiki-compile` command** to initiate compilation.
 
