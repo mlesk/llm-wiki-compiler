@@ -63,19 +63,30 @@ function parseIndexTopics(indexContent) {
     if (inTopicTable && line.match(/^\|[-\s|]+\|$/)) continue;
     if (inTopicTable && line.startsWith('|')) {
       const cols = line.split('|').map(s => s.trim()).filter(Boolean);
-      if (cols.length >= 4) {
-        const linkMatch = cols[0].match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (cols.length >= 2) {
+        // Markdown link: [name](path.md)
+        let linkMatch = cols[0].match(/\[([^\]]+)\]\(([^)]+)\)/);
+        let name, slug;
         if (linkMatch) {
-          const name = linkMatch[1];
-          const filePath = linkMatch[2];
-          const slug = path.basename(filePath, '.md');
+          name = linkMatch[1];
+          slug = path.basename(linkMatch[2], '.md');
+        } else {
+          // Obsidian wikilink: [[topics/slug]] or [[slug]]
+          const wikiMatch = cols[0].match(/\[\[([^\]]+)\]\]/);
+          if (wikiMatch) {
+            const target = wikiMatch[1];
+            slug = path.basename(target);
+            name = slug;
+          }
+        }
+        if (slug) {
           topics.push({
             slug,
             name,
-            aliases: cols[1] || '',
-            sourceCount: parseInt(cols[2]) || 0,
-            lastUpdated: cols[3] || '',
-            status: cols[4] || 'active'
+            aliases: cols.length >= 4 ? cols[1] : '',
+            sourceCount: parseInt(cols.length >= 4 ? cols[2] : cols[1]) || 0,
+            lastUpdated: cols.length >= 4 ? cols[3] : '',
+            status: cols.length >= 5 ? cols[4] : 'active'
           });
         }
       }
