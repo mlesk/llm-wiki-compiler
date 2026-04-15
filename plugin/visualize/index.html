@@ -322,7 +322,7 @@ async function loadData() {
     targetX: centerX, targetY: centerY
   }));
 
-  edges = graphData.edges.map(e => ({ from: e.from, to: e.to, concept: e.concept }));
+  edges = graphData.edges.map(e => ({ from: e.from, to: e.to, concept: e.concept, type: e.type || 'concept', sharedCount: e.sharedCount || 0 }));
   concepts = graphData.concepts;
 
   // Build adjacency map for multi-hop expansion
@@ -425,10 +425,13 @@ function drawEdges() {
     const isExpansionDimmed = expandedSet.size > 0 &&
       !(expandedSet.has(e.from) && expandedSet.has(e.to));
 
+    const isShared = e.type === 'shared';
+
     ctx.save();
-    ctx.globalAlpha = (isSearchDimmed || isExpansionDimmed) ? 0.02 : (isHighlighted ? 0.35 : 0.05);
-    ctx.strokeStyle = isHighlighted ? '#5B9BF6' : '#5B9BF6';
-    ctx.lineWidth = isHighlighted ? 1.2 : 0.6;
+    ctx.globalAlpha = (isSearchDimmed || isExpansionDimmed) ? 0.02 : (isHighlighted ? (isShared ? 0.25 : 0.35) : (isShared ? 0.035 : 0.05));
+    ctx.strokeStyle = isShared ? '#8B8B8B' : '#5B9BF6';
+    ctx.lineWidth = isHighlighted ? (isShared ? 0.9 : 1.2) : (isShared ? 0.5 : 0.6);
+    if (isShared) ctx.setLineDash([3, 4]); else ctx.setLineDash([]);
 
     // Curved edge
     const mx = (fromNode.x + toNode.x) / 2;
@@ -442,6 +445,7 @@ function drawEdges() {
     ctx.moveTo(fromNode.x, fromNode.y);
     ctx.quadraticCurveTo(cpx, cpy, toNode.x, toNode.y);
     ctx.stroke();
+    ctx.setLineDash([]);
 
     // Edge label — ONLY for directly hovered edge, not all edges of hovered node
     if (isDirectHover) {
@@ -634,9 +638,14 @@ canvas.addEventListener('mousemove', (e) => {
     tooltip.style.top = (my - 10) + 'px';
     tooltip.classList.add('visible');
   } else if (foundEdge) {
-    const concept = concepts.find(c => c.slug === foundEdge.concept);
-    document.getElementById('ttName').textContent = concept ? concept.name : foundEdge.concept;
-    document.getElementById('ttDetail').textContent = 'click to read concept';
+    if (foundEdge.type === 'shared') {
+      document.getElementById('ttName').textContent = `${foundEdge.from} ↔ ${foundEdge.to}`;
+      document.getElementById('ttDetail').textContent = `${foundEdge.sharedCount} shared sources`;
+    } else {
+      const concept = concepts.find(c => c.slug === foundEdge.concept);
+      document.getElementById('ttName').textContent = concept ? concept.name : foundEdge.concept;
+      document.getElementById('ttDetail').textContent = 'click to read concept';
+    }
     tooltip.style.left = (mx + 16) + 'px';
     tooltip.style.top = (my - 10) + 'px';
     tooltip.classList.add('visible');
@@ -654,7 +663,7 @@ canvas.addEventListener('click', async (evt) => {
   if (hoveredNode) {
     selectedNode = hoveredNode;
     await openArticle('topic', hoveredNode.slug);
-  } else if (hoveredEdge) {
+  } else if (hoveredEdge && hoveredEdge.type !== 'shared') {
     await openArticle('concept', hoveredEdge.concept);
   } else if (panel.classList.contains('open')) {
     closePanel();

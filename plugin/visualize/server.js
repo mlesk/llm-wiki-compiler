@@ -120,6 +120,24 @@ function parseSections(body) {
   return sections;
 }
 
+// Extract source paths from the Sources section of an article body.
+// Handles both Obsidian wikilinks [[path/to/file]] and markdown links [text](path.md).
+function extractSourcePaths(body) {
+  const sourcesSection = body.match(/\n## Sources[^\n]*\n([\s\S]*?)(?:\n## |\n---|\n$|$)/i);
+  if (!sourcesSection) return [];
+  const text = sourcesSection[1];
+  const paths = new Set();
+  // Obsidian wikilinks: [[path]] or [[path|label]]
+  for (const m of text.matchAll(/\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g)) {
+    paths.add(m[1].trim());
+  }
+  // Markdown links: [text](path)
+  for (const m of text.matchAll(/\[[^\]]+\]\(([^)]+\.md)\)/g)) {
+    paths.add(m[1].trim());
+  }
+  return Array.from(paths);
+}
+
 // --- Data Loading ---
 
 function loadGraph() {
@@ -140,9 +158,27 @@ function loadGraph() {
   // Parse topics from table
   const topics = parseIndexTopics(indexContent);
 
+  // Load each topic's sources list to enable shared-source fallback edges
+  // for topics without concept coverage.
+  const topicSources = {}; // slug -> Set<sourcePath>
+  const topicsDir = path.join(wikiDir, 'topics');
+  if (fs.existsSync(topicsDir)) {
+    for (const topic of topics) {
+      const topicPath = path.join(topicsDir, `${topic.slug}.md`);
+      if (fs.existsSync(topicPath)) {
+        const content = fs.readFileSync(topicPath, 'utf8');
+        const { body } = parseFrontmatter(content);
+        topicSources[topic.slug] = new Set(extractSourcePaths(body));
+      } else {
+        topicSources[topic.slug] = new Set();
+      }
+    }
+  }
+
   // Parse concepts
   const concepts = [];
   const edges = [];
+  const conceptEdgeKeys = new Set(); // dedupe for shared-source pass
   const conceptsDir = path.join(wikiDir, 'concepts');
   if (fs.existsSync(conceptsDir)) {
     const conceptFiles = fs.readdirSync(conceptsDir).filter(f => f.endsWith('.md'));
@@ -156,10 +192,64 @@ function loadGraph() {
       // Build edges: every pair of connected topics
       for (let i = 0; i < connects.length; i++) {
         for (let j = i + 1; j < connects.length; j++) {
-          edges.push({ from: connects[i], to: connects[j], concept: slug });
+          const [a, b] = [connects[i], connects[j]].sort();
+          edges.push({ from: connects[i], to: connects[j], concept: slug, type: 'concept' });
+          conceptEdgeKeys.add(`${a}|${b}`);
         }
       }
     }
+  }
+
+  // Fallback edges for topics without concept coverage. Two sources:
+  //  (a) topic-to-topic references: when topic A's Sources section wikilinks
+  //      to another topic (e.g., ai-architecture cites [[inspiration-bookmarks]]).
+  //  (b) shared external sources: two topics sharing >=N source file paths.
+  const SHARED_SOURCE_THRESHOLD = 3;
+  const topicSlugSet = new Set(Object.keys(topicSources));
+  const sharedEdges = new Map(); // key -> {from,to,count,reason}
+  const addSharedEdge = (a, b, count, reason) => {
+    if (a === b) return;
+    const [x, y] = [a, b].sort();
+    const key = `${x}|${y}`;
+    if (conceptEdgeKeys.has(key)) return;
+    const existing = sharedEdges.get(key);
+    if (!existing || count > existing.count) {
+      sharedEdges.set(key, { from: a, to: b, count, reason });
+    }
+  };
+
+  // (a) topic-to-topic references via Sources section
+  for (const [slug, sources] of Object.entries(topicSources)) {
+    for (const src of sources) {
+      // Extract tail slug from paths like "inspiration-bookmarks" or "topics/foo" or "../topics/foo"
+      const tail = src.replace(/\.md$/, '').split('/').pop();
+      if (tail && tail !== slug && topicSlugSet.has(tail)) {
+        addSharedEdge(slug, tail, 1, 'topic-ref');
+      }
+    }
+  }
+
+  // (b) shared external source paths
+  const topicSlugs = Object.keys(topicSources);
+  for (let i = 0; i < topicSlugs.length; i++) {
+    for (let j = i + 1; j < topicSlugs.length; j++) {
+      const a = topicSlugs[i];
+      const b = topicSlugs[j];
+      const setA = topicSources[a];
+      const setB = topicSources[b];
+      if (!setA || !setB || setA.size === 0 || setB.size === 0) continue;
+      let shared = 0;
+      const smaller = setA.size <= setB.size ? setA : setB;
+      const larger = setA.size <= setB.size ? setB : setA;
+      for (const p of smaller) { if (larger.has(p)) shared++; }
+      if (shared >= SHARED_SOURCE_THRESHOLD) {
+        addSharedEdge(a, b, shared, 'shared-sources');
+      }
+    }
+  }
+
+  for (const e of sharedEdges.values()) {
+    edges.push({ from: e.from, to: e.to, concept: null, type: 'shared', sharedCount: e.count, reason: e.reason });
   }
 
   return { name, totalTopics, totalSources, topics, concepts, edges };
