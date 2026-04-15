@@ -224,9 +224,10 @@ See your compiled wiki as an interactive knowledge graph. Topics appear as nodes
 
 - **Hover** nodes to see source count and highlight connections
 - **Click** a node to read the full article in a side panel with coverage badges
+- **Shift-click** a node to expand its neighborhood — concept-connected topics light up, others dim. Shift-click again to keep walking the graph (depth 2, depth 3, …). The HUD shows how many nodes and seeds are currently lit.
 - **Hover edges** to see concept names linking topics
 - **Search** to filter topics by name or alias
-- **Escape** to close the article panel
+- **Escape** to close the article panel or clear the expansion
 
 Canvas-based, zero dependencies, Nothing Design System tokens (Space Grotesk + Space Mono typography). Works with both knowledge mode and codebase mode wikis.
 
@@ -256,6 +257,20 @@ First run walks you through:
 4. Adding `~/.ft-bookmarks/md/` to your `.wiki-compiler.json` sources
 
 After that, `/fetch-bookmarks x` just resyncs. Run `/wiki-compile` whenever you want bookmarks folded into topic articles.
+
+### Auto-Sync (Set and Forget)
+
+Manual syncing gets forgotten. Install a daily background job:
+
+```bash
+/fetch-bookmarks schedule x
+```
+
+On macOS this writes a `launchd` plist to `~/Library/LaunchAgents/dev.llm-wiki-compiler.x-sync.plist` that runs `ft sync && ft md` daily at 03:00 local. No LLM tokens, no Claude Code needed — pure shell. On Linux/WSL you get a `crontab` snippet to paste.
+
+The `/wiki-compile` step stays manual by design — it needs an LLM and your judgment. When you next open Claude Code in a wiki project, the session-start hook tells you how many new bookmarks have arrived since the last compile, so your intent translates to action without you having to track dates.
+
+Uninstall with `/fetch-bookmarks schedule x --uninstall` (or `launchctl unload` manually).
 
 ### Available Sources
 
@@ -288,7 +303,7 @@ Copy `plugin/skills/wiki-compiler/adapters/x.md` and follow the contract documen
 | `/wiki-init` | One-time setup -- auto-detects markdown directories, samples files, proposes custom article structure |
 | `/wiki-compile` | Compiles source files into topic articles (incremental -- only recompiles changes). Generates `schema.md` on first run. |
 | `/wiki-ingest` | Add a single source interactively -- read, discuss key takeaways, update relevant wiki articles |
-| `/fetch-bookmarks` | Pull bookmarks from external services (X today; Readwise, Pocket planned) into a local directory that `/wiki-compile` can consume |
+| `/fetch-bookmarks` | Pull bookmarks from external services (X today; Readwise, Pocket planned). `schedule <source>` wires a daily launchd job. |
 | `/wiki-search` | Search across wiki articles by keyword or phrase |
 | `/wiki-lint` | Health checks -- finds stale articles, orphan pages, missing cross-references, contradictions, low coverage |
 | `/wiki-query` | Optional -- Q&A against the wiki. Can file useful answers back into wiki articles. |
@@ -348,6 +363,18 @@ Every section includes a coverage tag so you (or your AI agent) know when to tru
 - **low** (0-1 sources) — read the raw sources listed in that section
 
 This gives you the speed of the wiki (84% fewer tokens) without sacrificing accuracy. Your agent reads the wiki first, and only falls back to raw files for low-coverage sections.
+
+### Time-Decay Awareness
+
+Tweets from 2022 and tweets from 2026 don't carry equal weight on questions about AI tooling or UI patterns — so the compiler doesn't treat them as equal either. For **time-sensitive topics** (AI, design, growth tactics, bookmark-heavy topics), the compiler:
+
+- Extracts a source date from each input (frontmatter `posted_at` / `date`, filename date, or mtime)
+- Orders Timeline and Key Decisions bullets newest-first, date-prefixed
+- Flags claims older than 18 months with ⚠️
+- Adds `[as of YYYY-MM]` tags to sections resting mostly on aging sources
+- In conflicts, prefers the newer source and notes the shift
+
+Stable topics (career, personal growth, visa work) use looser thresholds (24/48 months). Nothing gets deleted — stale entries stay for historical context, just clearly marked.
 
 ### Obsidian Compatible
 

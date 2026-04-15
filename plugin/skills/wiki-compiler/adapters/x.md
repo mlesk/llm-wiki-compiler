@@ -71,6 +71,16 @@ Run /wiki-compile to synthesize them into topic articles.
 
 Do NOT invoke `/wiki-compile` automatically.
 
+## Scheduling
+
+This adapter supports auto-sync via `/fetch-bookmarks schedule x`.
+
+- **sync_command:** `ft sync && ft md`
+- **default_cadence:** daily, 03:00 local time (launchd `StartCalendarInterval`: Hour=3, Minute=0)
+- **log_path:** `~/.ft-bookmarks/autosync.log`
+
+The sync_command is safe to run while the user is not at the keyboard — fieldtheory reads cookies from the already-logged-in browser profile and doesn't require any interactive input after the initial manual run. If the user's browser is closed, `ft sync` may still work (cookies persist on disk) but failures are silent; check `log_path` the next day to confirm.
+
 ## Troubleshooting
 
 - **`ft sync` fails with "Couldn't connect to your browser session":** see the ladder in Step 3. Most common cause is non-default Chrome profile — try `--chrome-profile-directory "Profile 3"` etc.

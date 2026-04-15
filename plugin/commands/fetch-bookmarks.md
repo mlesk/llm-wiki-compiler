@@ -6,19 +6,27 @@ The command itself is a thin dispatcher. Each source has its own adapter file th
 
 ## Instructions
 
-### Step 1: Parse the source argument
+### Step 1: Parse arguments
 
-- Accept one argument: the source slug (e.g., `/fetch-bookmarks x`).
-- If no argument is provided, list the available adapters by globbing `${CLAUDE_PLUGIN_ROOT}/skills/wiki-compiler/adapters/*.md` and show:
-  ```
-  Usage: /fetch-bookmarks <source>
+Accept one of these forms:
 
-  Available sources:
-  - x — X/Twitter bookmarks (via Field Theory CLI)
+- `/fetch-bookmarks <source>` — sync once (default).
+- `/fetch-bookmarks schedule <source>` — install a daily auto-sync job.
+- `/fetch-bookmarks schedule <source> --uninstall` — remove the auto-sync job.
+- `/fetch-bookmarks` (no args) — list available adapters and usage; then stop.
 
-  More adapters planned: readwise, pocket, github-stars.
-  ```
-  Then stop.
+When listing adapters, glob `${CLAUDE_PLUGIN_ROOT}/skills/wiki-compiler/adapters/*.md`:
+```
+Usage:
+  /fetch-bookmarks <source>                          Sync once
+  /fetch-bookmarks schedule <source>                 Install daily auto-sync
+  /fetch-bookmarks schedule <source> --uninstall     Remove auto-sync
+
+Available sources:
+- x — X/Twitter bookmarks (via Field Theory CLI)
+
+More adapters planned: readwise, pocket, github-stars.
+```
 
 ### Step 2: Locate the adapter
 
@@ -30,25 +38,51 @@ The command itself is a thin dispatcher. Each source has its own adapter file th
   ```
   Then stop.
 
-### Step 3: Follow the adapter
+### Step 3a: One-off sync (default)
 
 - Read the adapter file in full.
-- Follow its steps in order. Each adapter is self-contained and handles its own preflight, consent prompts, sync, and config updates.
+- Follow its numbered steps in order. Each adapter is self-contained and handles its own preflight, consent prompts, sync, and config updates.
 - Surface the adapter's step-by-step progress to the user as you go. Do not retry failing steps silently — if a step fails, stop and show the error.
+- After successful completion, print:
+  ```
+  Bookmarks fetched. Run /wiki-compile to synthesize them into topic articles.
+  ```
+  Do **not** auto-invoke `/wiki-compile`.
 
-### Step 4: Close the loop
+### Step 3b: Install auto-sync (`schedule <source>`)
 
-After the adapter finishes successfully, print:
+- Read the adapter file and look for its **`## Scheduling`** section. It must document:
+  - `sync_command` — the shell command to run on a schedule (e.g., `ft sync && ft md` for `x`)
+  - `default_cadence` — recommended schedule (e.g., "daily 03:00 local")
+  - `log_path` — where the sync command writes stdout/stderr
+- If the adapter has no `## Scheduling` section, tell the user this adapter doesn't support auto-sync yet and stop.
+- **macOS:** Generate a launchd plist at `~/Library/LaunchAgents/dev.llm-wiki-compiler.{source}-sync.plist` using the adapter's `sync_command` and `default_cadence`. Label: `dev.llm-wiki-compiler.{source}-sync`. Include `StandardOutPath` and `StandardErrorPath` pointing at `log_path`. Use `/bin/bash -lc "<sync_command>"` so the login shell loads PATH. Set `RunAtLoad` to `false`.
+- Run `launchctl unload ~/Library/LaunchAgents/dev.llm-wiki-compiler.{source}-sync.plist 2>/dev/null` first (idempotent), then `launchctl load ~/Library/LaunchAgents/dev.llm-wiki-compiler.{source}-sync.plist`.
+- Verify with `launchctl list | grep dev.llm-wiki-compiler.{source}-sync`.
+- Print: next scheduled run time, log path, and the uninstall command. Example:
+  ```
+  ✓ Auto-sync installed. Next run: tomorrow 03:00 local.
+  Log: ~/.ft-bookmarks/autosync.log
+  Uninstall: /fetch-bookmarks schedule x --uninstall
+  ```
+- **Linux / WSL:** Don't auto-install. Print a crontab snippet the user can paste:
+  ```
+  # Add this with `crontab -e`:
+  0 3 * * * /bin/bash -lc '<sync_command> >> <log_path> 2>&1'
+  ```
+- **Windows:** Print a Task Scheduler hint; don't auto-install.
 
-```
-Bookmarks fetched. Run /wiki-compile to synthesize them into topic articles.
-```
+### Step 3c: Uninstall auto-sync (`schedule <source> --uninstall`)
 
-Do **not** auto-invoke `/wiki-compile`. The user may want to fetch from multiple sources or tweak `.wiki-compiler.json` before compiling.
+- **macOS:** Run `launchctl unload ~/Library/LaunchAgents/dev.llm-wiki-compiler.{source}-sync.plist 2>/dev/null`, then delete the plist file.
+- Print confirmation.
+- If the plist doesn't exist, say so and stop without error.
 
 ## Arguments
 
-- `<source>` — required. Slug matching an adapter file in `plugin/skills/wiki-compiler/adapters/`. Currently: `x`.
+- `<source>` — slug matching an adapter file (currently: `x`).
+- `schedule <source>` — install auto-sync for this source.
+- `schedule <source> --uninstall` — remove auto-sync for this source.
 - No arguments: prints help listing available adapters.
 
 ## Adapter contract (for contributors)
@@ -61,5 +95,6 @@ Each adapter is a self-contained markdown file that the dispatcher follows. Adap
 4. Ensure the source's output ends up as markdown at a stable path.
 5. Read `.wiki-compiler.json` from the project root. If that path is not already present in `sources[]`, ask the user to confirm adding it, then write the update preserving all other fields.
 6. Print a "run `/wiki-compile`" suggestion. Never auto-invoke compile.
+7. **Optional: `## Scheduling` section** documenting `sync_command`, `default_cadence`, and `log_path` so `/fetch-bookmarks schedule <source>` can wire launchd/cron. Adapters without this section don't support auto-sync.
 
 See `plugin/skills/wiki-compiler/adapters/x.md` for the reference implementation.
