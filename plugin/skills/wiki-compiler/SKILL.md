@@ -62,12 +62,17 @@ Before running, read `.wiki-compiler.json` from the project root to get:
    - File path (directory structure is a strong signal)
    - Title (first `#` heading)
    - First 500 characters of content
+   - **Source date** — extract using this precedence: frontmatter `posted_at` / `date` / `last_updated` > filename date pattern (e.g., `2026-04-15-standup.md`) > file mtime. Parse to `YYYY-MM-DD`. Track alongside the file path — every source should have a date, or be explicitly marked `undated`.
 2. Classify each file into one or more topics based on content signals
 3. **Use `topic_hints` from config** as seed topics when available
 4. **Prefer existing topic slugs** from `.compile-state.json` — avoid creating near-duplicates
 5. A single file CAN belong to multiple topics
 6. Files that don't match any topic: group them — if 3+ unclassified files share a theme, create a new topic
 7. Topic slugs should be lowercase-kebab-case (e.g., `d1-retention`, `push-notifications`)
+8. **Classify each topic as time-sensitive or stable** (used by Phase 3 for date annotations):
+   - **Time-sensitive** (default when unsure): any topic touching fast-moving domains — AI tooling/architecture, UI/design patterns, growth/marketing tactics, workflows, dev tools, `inspiration-*`, or any topic drawing ≥50% of its sources from external bookmark directories.
+   - **Stable**: career/visa/personal-growth/sessions-*/relationship topics where claims don't decay on short timescales.
+   - Err toward time-sensitive — the cost of annotating a date on stable content is low; the cost of confident-sounding stale claims is high.
 
 **Topic detection guidance:**
 - Use directory names as strong signals (files in `retention/` likely belong to a retention topic)
@@ -145,6 +150,21 @@ For EACH topic that has new or changed source files:
    - `[coverage: low -- N sources]` -- 0-1 sources or sparse data. Reader should read the raw sources directly.
    
    Calculate coverage per section, not per article. An article might have high coverage on Summary but low coverage on Experiments. This tells the reader (human or AI agent) exactly when to trust the wiki vs when to fall back to raw files.
+
+8. **Time-decay annotations** — apply these rules so readers can calibrate claims against when they were captured. Use the `source_date` collected in Phase 2.
+
+   Define the staleness threshold:
+   - **Time-sensitive topics**: claims older than 6 months are "aging", older than 18 months are "stale"
+   - **Stable topics**: claims older than 24 months are "aging", older than 48 months are "stale"
+
+   Apply these conventions:
+   - **Summary section** for time-sensitive topics: lead with the date range of sources, e.g., "Sources span 2024-01 to 2026-04. Recent consensus (<12mo): … Older patterns (>18mo, may be stale): …". Do not blend old and new claims as if equivalent.
+   - **Timeline / Key Decisions**: order bullets reverse-chronologically (newest first). Prefix each bullet with its date. Prefix stale bullets with `⚠️ [YYYY-MM, may be stale]` so the reader can skim past them.
+   - **Per-section `[as of YYYY-MM]` tag**: when a section rests primarily on aging sources (older than the topic's aging threshold), add `[as of YYYY-MM]` next to the coverage tag, where YYYY-MM is the median source date.
+   - **Conflicting sources**: when two sources disagree and one is materially newer (>12 months for time-sensitive, >24 months for stable), prefer the newer synthesis and note the shift explicitly in Key Decisions: `"YYYY-MM: {earlier framing} → {new framing}"`. Attribute both to their source files.
+   - **Bookmark-dominated topics** (≥50% of sources from external bookmark directories like `~/.ft-bookmarks/md/bookmarks/`): always annotate bullets with inline dates, and mention the dominant date range in Summary. Tweets are snapshots of a moment — never present them as timeless.
+
+   Do NOT delete stale content. Flag, re-order, or annotate. The wiki is a time-series artifact; old entries have historical value even when no longer current.
 
 **Link style:**
 - `obsidian`: Use `[[relative/path/to/file]]` (without .md extension)

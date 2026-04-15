@@ -1,6 +1,16 @@
 <!-- DEFAULT TEMPLATE: Used when .wiki-compiler.json has no article_sections field.
      New projects get custom sections generated during /wiki-init based on actual source content. -->
 
+<!-- TIME-DECAY GUIDANCE:
+     Time-sensitive topics (AI tooling/architecture, UI patterns, growth tactics,
+     any bookmark-heavy topic): 6mo → aging, 18mo → stale.
+     Stable topics (career, visa, personal-growth): 24mo → aging, 48mo → stale.
+     Apply:
+     - Summary leads with the date range of sources
+     - Timeline / Key Decisions ordered newest-first, date-prefixed, ⚠️ on stale
+     - Sections resting on aging sources get "[as of YYYY-MM]" next to coverage tag
+     - Never delete stale content — flag, re-order, or annotate -->
+
 ---
 topic: {Topic Name}
 last_compiled: {YYYY-MM-DD}
