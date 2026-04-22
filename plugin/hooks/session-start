@@ -55,17 +55,25 @@ else
 
   # Stale detection: count source files changed since last compile
   stale_warning=""
+  bookmark_count=0
   if [ "$auto_update" = "prompt" ] && [ "$last_compiled" != "unknown" ]; then
     sources_json=$(node -e "const c=require('$config_file'); (c.sources||[]).forEach(s => console.log(s.path))" 2>/dev/null)
     changed_count=0
     while IFS= read -r src_path; do
-      if [ -n "$src_path" ] && [ -d "$project_root/$src_path" ]; then
+      if [ -z "$src_path" ]; then continue; fi
+      # Expand tilde paths for external source dirs like ~/.ft-bookmarks/md/bookmarks/
+      if [[ "$src_path" == ~/* || "$src_path" == "~" ]]; then
+        resolved_path="${src_path/#\~/$HOME}"
+      else
+        resolved_path="$project_root/$src_path"
+      fi
+      if [ -d "$resolved_path" ]; then
         # Create a reference file with the last_compiled date
         ref_file=$(mktemp)
         touch -t "$(echo "$last_compiled" | sed 's/-//g')0000" "$ref_file" 2>/dev/null
         if [ "$wiki_mode" = "codebase" ]; then
           # Codebase mode: watch knowledge files + key source files, not just .md
-          count=$(find "$project_root/$src_path" \
+          count=$(find "$resolved_path" \
             \( -name "README.md" -o -name "CLAUDE.md" -o -name "AGENTS.md" -o -name "ARCHITECTURE.md" \
                -o -name "CONTRIBUTING.md" -o -name "CHANGELOG.md" \
                -o -name "*.proto" -o -name "*.graphql" \
@@ -79,15 +87,26 @@ else
             -newer "$ref_file" 2>/dev/null | wc -l | tr -d ' ')
         else
           # Knowledge mode: watch .md files
-          count=$(find "$project_root/$src_path" -name "*.md" -newer "$ref_file" 2>/dev/null | wc -l | tr -d ' ')
+          count=$(find "$resolved_path" -name "*.md" -newer "$ref_file" 2>/dev/null | wc -l | tr -d ' ')
         fi
         changed_count=$((changed_count + count))
+        # Track bookmark-dir changes separately for a nicer message
+        if [[ "$src_path" == *ft-bookmarks* || "$src_path" == *bookmarks/* ]]; then
+          bookmark_count=$((bookmark_count + count))
+        fi
         rm -f "$ref_file"
       fi
     done <<< "$sources_json"
 
     if [ "$changed_count" -gt 0 ]; then
-      stale_warning="\n\n⚠️ Wiki may be stale — $changed_count files changed since last compile ($last_compiled). Run /wiki-compile to update."
+      if [ "$bookmark_count" -gt 0 ] && [ "$bookmark_count" -eq "$changed_count" ]; then
+        stale_warning="\n\n📎 $bookmark_count new bookmark(s) since last compile ($last_compiled). Run /wiki-compile to fold them into topics."
+      elif [ "$bookmark_count" -gt 0 ]; then
+        other=$((changed_count - bookmark_count))
+        stale_warning="\n\n⚠️ Wiki may be stale — $bookmark_count new bookmark(s) + $other other file(s) changed since last compile ($last_compiled). Run /wiki-compile to update."
+      else
+        stale_warning="\n\n⚠️ Wiki may be stale — $changed_count files changed since last compile ($last_compiled). Run /wiki-compile to update."
+      fi
     fi
   fi
 
